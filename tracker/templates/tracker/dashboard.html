@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SpendWise Dashboard</title>
+
+    <style>
+        :root {
+            --bg: #eef1f7;
+            --card: white;
+            --text: #111;
+            --nav: white;
+        }
+
+        .dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #e5e7eb;
+            --nav: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            transition: 0.3s ease;
+        }
+
+        .navbar {
+            background: var(--nav);
+            padding: 18px 35px;
+            font-size: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .container {
+            padding: 35px;
+        }
+
+        .add-btn {
+            display: inline-block;
+            background: #273c75;
+            color: white;
+            padding: 9px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            margin-right: 10px;
+        }
+
+        .filter-box {
+            background: var(--card);
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        select {
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .cards {
+            display: flex;
+            gap: 18px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 18px;
+            flex: 1;
+            min-width: 240px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .label {
+            font-size: 13px;
+            color: gray;
+            margin-bottom: 10px;
+        }
+
+        .amount {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .income { color: #22c55e; }
+        .expense { color: #ef4444; }
+        .balance { color: #38bdf8; }
+
+        button {
+            float: right;
+            background: #273c75;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        canvas {
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: 0.3s ease;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <span>SpendWise • Financial Overview</span>
+
+    <div style="float:right;">
+
+        <a href="/" class="add-btn">Dashboard</a>
+        <a href="/add/" class="add-btn">Add</a>
+        <a href="/transactions/" class="add-btn">Transactions</a>
+        <a href="/breakdown/" class="add-btn">Breakdown</a>
+
+        <button id="themeToggle">🌙 Dark</button>
+
+        <a href="/logout/" class="add-btn" style="background:#ef4444;">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <!-- <a href="/add/" class="add-btn">+ Add Transaction</a>
+    <a href="/transactions/" class="add-btn">View Transactions</a>
+    <a href="/breakdown/" class="add-btn">Expense Breakdown</a> -->
+
+    <div class="filter-box">
+        <form method="get">
+            <label>Select Month:</label>
+            <select name="month" onchange="this.form.submit()">
+                <option value="">All</option>
+                <option value="1" {% if selected_month == "1" %}selected{% endif %}>January</option>
+                <option value="2" {% if selected_month == "2" %}selected{% endif %}>February</option>
+                <option value="3" {% if selected_month == "3" %}selected{% endif %}>March</option>
+                <option value="4" {% if selected_month == "4" %}selected{% endif %}>April</option>
+                <option value="5" {% if selected_month == "5" %}selected{% endif %}>May</option>
+                <option value="6" {% if selected_month == "6" %}selected{% endif %}>June</option>
+                <option value="7" {% if selected_month == "7" %}selected{% endif %}>July</option>
+                <option value="8" {% if selected_month == "8" %}selected{% endif %}>August</option>
+                <option value="9" {% if selected_month == "9" %}selected{% endif %}>September</option>
+                <option value="10" {% if selected_month == "10" %}selected{% endif %}>October</option>
+                <option value="11" {% if selected_month == "11" %}selected{% endif %}>November</option>
+                <option value="12" {% if selected_month == "12" %}selected{% endif %}>December</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="label">Total Income</div>
+            <div class="amount income">₹ {{ income }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Total Expenses</div>
+            <div class="amount expense">₹ {{ expenses }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Balance</div>
+            <div class="amount balance">₹ {{ balance }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Monthly Budget</div>
+            <div class="amount balance">₹ {{ budget }}</div>
+
+            {% if budget %}
+                <div class="progress-bar">
+                    <div class="progress-fill"
+                         style="width: {{ percentage }}%;
+                                background: {% if percentage > 90 %}#ef4444{% else %}#22c55e{% endif %};">
+                    </div>
+                </div>
+
+                <div style="font-size:12px; margin-top:6px;">
+                    Spent: ₹ {{ spent }} | Remaining: ₹ {{ remaining }}
+                </div>
+            {% else %}
+                <div style="font-size:12px; margin-top:6px; color:gray;">
+                    No budget set
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="label">Income vs Expenses Overview</div>
+            <canvas id="incomeExpenseChart" height="90"></canvas>
+        </div>
+
+        <div class="card">
+            <div class="label">Expense Distribution by Category</div>
+            <canvas id="expensePieChart" height="90"></canvas>
+        </div>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="label">Total Transactions</div>
+            <div class="amount">{{ total_transactions }}</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Highest Expense</div>
+            <div class="amount expense">
+                ₹ {% if highest_expense %}{{ highest_expense.amount }}{% else %}0{% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="label">Highest Income</div>
+            <div class="amount income">
+                ₹ {% if highest_income %}{{ highest_income.amount }}{% else %}0{% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="label">Recent Transaction</div>
+            <div>
+                {% if recent_transaction %}
+                    {{ recent_transaction.category }} → ₹ {{ recent_transaction.amount }}
+                {% else %}
+                    No data
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const isDark = localStorage.getItem("theme") === "dark";
+
+if (isDark) {
+    document.body.classList.add("dark");
+    document.getElementById("themeToggle").innerText = "☀️ Light";
+}
+
+document.getElementById("themeToggle").onclick = () => {
+    localStorage.setItem("theme", isDark ? "light" : "dark");
+    location.reload();
+};
+
+const fontColor = isDark ? "#e5e7eb" : "#111";
+const gridColor = isDark ? "#334155" : "#e5e7eb";
+
+new Chart(document.getElementById('incomeExpenseChart'), {
+    type: 'line',
+    data: {
+        labels: {{ months|safe }},
+        datasets: [
+            { label: 'Income', data: {{ income_data|safe }}, borderWidth: 2, tension: 0.35 },
+            { label: 'Expenses', data: {{ expense_data|safe }}, borderWidth: 2, tension: 0.35 }
+        ]
+    }
+});
+
+new Chart(document.getElementById('expensePieChart'), {
+    type: 'pie',
+    data: {
+        labels: {{ pie_labels|safe }},
+        datasets: [{
+            data: {{ pie_totals|safe }},
+            backgroundColor: ["#4f46e5","#06b6d4","#10b981","#f59e0b","#ef4444"]
+        }]
+    }
+});
+</script>
+
+</body>
+</html>

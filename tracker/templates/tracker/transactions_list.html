@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transactions</title>
+
+    <style>
+        :root {
+            --bg1: #0f172a;
+            --bg2: #1e293b;
+            --glass: rgba(255,255,255,0.06);
+            --border: rgba(255,255,255,0.18);
+            --accent: #38bdf8;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+            background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+            color: white;
+        }
+
+        .navbar {
+            background: rgba(15,23,42,0.75);
+            backdrop-filter: blur(10px);
+            padding: 18px 35px;
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+
+        .container {
+            padding: 30px 40px;
+        }
+
+        .top-bar {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            padding: 9px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            margin-right: 10px;
+            transition: 0.25s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+        }
+
+        .filter-bar {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-size: 13px;
+            color: #cbd5f5;
+        }
+
+        select, input {
+            padding: 7px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent);
+        }
+
+        option {
+            background: #0f172a;
+            color: white;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            text-align: left;
+            font-size: 13px;
+            font-weight: 500;
+            color: #cbd5f5;
+            padding: 14px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        td {
+            padding: 14px;
+            font-size: 13px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .income {
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .expense {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .actions a {
+            text-decoration: none;
+            margin-right: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .edit { color: #38bdf8; }
+        .delete { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    SpendWise • Transactions
+</div>
+
+<div class="container">
+
+    <div class="top-bar">
+        <a href="/" class="btn">← Dashboard</a>
+        <a href="/add/" class="btn">+ Add Transaction</a>
+    </div>
+
+    <form method="get" class="filter-bar">
+
+        <label>Type:</label>
+        <select name="type">
+            <option value="ALL">All</option>
+            <option value="INCOME" {% if selected_type == "INCOME" %}selected{% endif %}>Income</option>
+            <option value="EXPENSE" {% if selected_type == "EXPENSE" %}selected{% endif %}>Expense</option>
+        </select>
+
+        <label>Category:</label>
+        <select name="category">
+            <option value="ALL">All</option>
+            {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>From:</label>
+        <input type="date" name="start" value="{{ start_date }}">
+
+        <label>To:</label>
+        <input type="date" name="end" value="{{ end_date }}">
+
+        <button type="submit">Apply Filters</button>
+
+    </form>
+
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for txn in transactions %}
+        <tr>
+            <td>{{ txn.date }}</td>
+            <td>{{ txn.category }}</td>
+            <td>{{ txn.type }}</td>
+            <td class="{% if txn.type == 'INCOME' %}income{% else %}expense{% endif %}">
+                ₹ {{ txn.amount }}
+            </td>
+            <td class="actions">
+                <a href="/edit/{{ txn.id }}/" class="edit">Edit</a>
+                <a href="/delete/{{ txn.id }}/" class="delete">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No transactions found</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>
